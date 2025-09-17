@@ -8,7 +8,7 @@ Use the pattern `<domain>.<area>_<optional_location>_<optional_function>`.
 
 - **domain** – entity domain such as `light`, `sensor`, `binary_sensor`, etc.
 - **area** – the physical room or zone from Home Assistant. This should correspond with actual areas defined in your HA.
-- **optional_location** – only when multiple similar entities exist in one area (`ceiling`, `lhs`, `window`).
+- **optional_location** / specifier – A specific physical location, component, or descriptor used to differentiate similar devices in the same area (e.g., `ceiling`, `window`, `desk_lamp`, `paddle`, `button1`).
 - **optional_function** – included when function is not clear from **domain**. Specifies purpose or grouping (`group`, `temperature`, `motion`). Multi-word functions use underscores.
 
 ### Examples
