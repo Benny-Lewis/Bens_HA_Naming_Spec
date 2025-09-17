@@ -128,4 +128,4 @@ Pattern: `<domain>.<area>_<optional_location>_<optional_function>`
 - **optional_location:** `paddle`  
 - **optional_function:** `double_to_entry_30_percent`
 
-> Tip: everything after the second underscore is the **optional_function**. If you don’t need it, omit it entirely—no trailing underscore.
+> Tip: The **optional_function** is the final part of the entity ID that describes what the entity does or measures. Area slugs themselves may include underscores (e.g., `living_room`). If you don’t need an optional function, omit it entirely—no trailing underscore.
