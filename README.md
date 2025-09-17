@@ -124,10 +124,17 @@ Pattern: `<domain>.<area>_<optional_location>_<optional_function>`
 - **optional_function:** `pressed_to_entire_home_evening`
   - Consider summarizing long actions as `<trigger>_<action_summary>` such as `automation.entryway_btn1_press_set_home_evening`.
 
-`automation.entryway_paddle_double_to_entry_30_percent`  
-- **domain:** `automation`  
-- **area:** `entryway`  
-- **optional_location:** `paddle`  
+`automation.entryway_paddle_double_to_entry_30_percent`
+- **domain:** `automation`
+- **area:** `entryway`
+- **optional_location:** `paddle`
 - **optional_function:** `double_to_entry_30_percent`
+
+**Recommended gesture tokens**
+
+- Use `pressed` for a single tap or press.
+- Use `double`, `triple`, `quad`, and `quint` for multi-tap gestures.
+- Use `hold` when the gesture represents a long-press.
+- Use `release` for actions triggered when a button is released.
 
 > Tip: The **optional_function** is the final part of the entity ID that describes what the entity does or measures. Area slugs themselves may include underscores (e.g., `living_room`). If you don’t need an optional function, omit it entirely—no trailing underscore.
