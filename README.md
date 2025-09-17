@@ -7,7 +7,7 @@ Consistent names keep entities readable and easy to find.
 Use the pattern `<domain>.<area>_<optional_location>_<optional_function>`.
 
 - **domain** – entity domain such as `light`, `sensor`, `binary_sensor`, etc.
-- **area** – the physical room or zone from Home Assistant.
+- **area** – the physical room or zone from Home Assistant. This should correspond with actual areas defined in your HA.
 - **optional_location** – only when multiple similar entities exist in one area (`ceiling`, `lhs`, `window`).
 - **optional_function** – clarifies purpose or grouping (`group`, `temperature`, `motion`). Multi-word functions use underscores.
 
