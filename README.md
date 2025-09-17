@@ -17,7 +17,7 @@ Use the pattern `<domain>.<area>_<optional_location>_<optional_function>`.
 `domain.area`
 
 - `light.bedroom`
-- `cover.livingroom`
+- `cover.living_room`
 
 `domain.area_location`
 
@@ -55,7 +55,7 @@ sensor.bedroom_shade_target_position            # current target position
 ## Automations, scenes, helpers
 
 - **Automations**: IDs may follow `automation.<area>_<action>` (e.g., `automation.bedroom_wake_lights`); friendly names in natural language (`Wake bedroom lights`). When the action portion gets long, break it into `<trigger>_<action_summary>` to stay scannable (e.g., `automation.entryway_btn1_press_set_home_evening`).
-- **Scenes**: `scene.<area>_<mood>` (e.g., `scene.livingroom_evening`).
+- **Scenes**: `scene.<area>_<mood>` (e.g., `scene.living_room_evening`).
 - **Helpers**: use the same entity ID pattern (`input_boolean.bedroom_guest_mode`).
 
 ## Example: Scene controller (Zooz ZEN35)
