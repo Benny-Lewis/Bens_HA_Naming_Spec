@@ -53,7 +53,7 @@ sensor.bedroom_shade_target_position            # current target position
 
 ## Automations, scenes, helpers
 
-- **Automations**: IDs may follow `automation.<area>_<action>` (e.g., `automation.bedroom_wake_lights`); friendly names in natural language (`Wake bedroom lights`).
+- **Automations**: IDs may follow `automation.<area>_<action>` (e.g., `automation.bedroom_wake_lights`); friendly names in natural language (`Wake bedroom lights`). When the action portion gets long, break it into `<trigger>_<action_summary>` to stay scannable (e.g., `automation.entryway_btn1_press_set_home_evening`).
 - **Scenes**: `scene.<area>_<mood>` (e.g., `scene.livingroom_evening`).
 - **Helpers**: use the same entity ID pattern (`input_boolean.bedroom_guest_mode`).
 
@@ -116,11 +116,12 @@ Pattern: `<domain>.<area>_<optional_location>_<optional_function>`
 
 **Automations (binding controller gestures → targets)**
 
-`automation.entryway_btn1_pressed_to_entire_home_evening`  
-- **domain:** `automation`  
-- **area:** `entryway`  
-- **optional_location:** `btn1`  
+`automation.entryway_btn1_pressed_to_entire_home_evening`
+- **domain:** `automation`
+- **area:** `entryway`
+- **optional_location:** `btn1`
 - **optional_function:** `pressed_to_entire_home_evening`
+  - Consider summarizing long actions as `<trigger>_<action_summary>` such as `automation.entryway_btn1_press_set_home_evening`.
 
 `automation.entryway_paddle_double_to_entry_30_percent`  
 - **domain:** `automation`  
