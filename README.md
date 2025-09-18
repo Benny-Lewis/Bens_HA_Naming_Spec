@@ -49,34 +49,37 @@ To create a deterministic name, apply these four rules in order. Stop at the fir
 * ✅ `select.entryway_paddle_single_tap` and `select.entryway_paddle_double_tap`
 * ✅ `sensor.front_door_lock_battery` and `sensor.front_door_lock_status`
 
-### Examples
+### Examples of the Rules in Action
 
-`domain.area`
-
+#### Rule 1: Uniqueness (Neither)
 - `light.bedroom`
 - `cover.living_room`
 
-`domain.area_location`
-
+#### Rule 2: Physicality (Location Only)
 - `light.bedroom_ceiling`
-- `light.bedroom_lhs`
+- `light.bedroom_lhs` (using "left hand side" as the location)
 - `cover.kitchen_window`
 
-`domain.area_function`
-
+#### Rule 3: Purpose (Function Only)
 - `light.bedroom_group`
 - `sensor.kitchen_temperature`
 - `binary_sensor.hallway_motion`
 
-Multi-word functions:
+#### Rule 4: Combination (Both)
+- `binary_sensor.bedroom_window_contact` (Location: `window`, Function: `contact`)
+- `sensor.front_door_lock_battery` (Location: `lock`, Function: `battery`)
 
-```
-binary_sensor.bedroom_contact                   # contact sensor
-input_boolean.bedroom_shade_automation_enabled  # allow automation to run
-input_number.bedroom_shade_night_position       # night position setting
-sensor.bedroom_shade_reported_position          # current actual position
-sensor.bedroom_shade_target_position            # current target position
-```
+
+#### Complex Functions
+Multi-word functions are common for helpers and template sensors. The table below shows how to parse them according to the rules.
+
+| Entity ID | Location | Function |
+| :--- | :--- | :--- |
+| `binary_sensor.bedroom_contact` | *(none)* | `contact` |
+| `input_boolean.bedroom_shade_automation_enabled`| `shade` | `automation_enabled` |
+| `input_number.bedroom_shade_night_position` | `shade` | `night_position` |
+| `sensor.bedroom_shade_reported_position` | `shade` | `reported_position` |
+
 
 ## Friendly names
 
@@ -177,52 +180,87 @@ Pattern: `<domain>.<area>_<optional_location>_<optional_function>`
 > Tip: The **optional_function** is the final part of the entity ID that describes what the entity does or measures. Area slugs themselves may include underscores (e.g., `living_room`). If you don’t need an optional function, omit it entirely—no trailing underscore.
 
 
+## Example: Scene controller (Zooz ZEN32)
 
-### Annotated example: Zooz ZEN35 (paddle + four scene buttons)
+### Annotated example: Zooz ZEN32 Scene Controller
 
-Pattern: `<domain>.<area>_<optional_location>_<optional_function>`
+The following entities demonstrate how the deterministic rules apply to a complex, real-world device.
 
-**Load (wired chandelier)**
+---
+**Load (wired chandelier) - Rule 2**
 `light.entryway_chandelier`
 - **domain:** `light`
 - **area:** `entryway`
-- **optional_location:** `chandelier` (The physical fixture)
-- **optional_function:** *(none)*
+- **location:** `chandelier` (The "Which")
+- **function:** *(none)*
 
+---
 **Controller settings (entities exposed by the device)**
 
+**Rule 4**
 `select.entryway_paddle_single_tap`
 - **domain:** `select`
 - **area:** `entryway`
-- **optional_location:** `paddle` (The "Which")
-- **optional_function:** `single_tap` (The "What")
+- **location:** `paddle` (The "Which" component)
+- **function:** `single_tap` (The "What" action)
 
+**Rule 4**
 `switch.entryway_button1_indication`
 - **domain:** `switch`
 - **area:** `entryway`
-- **optional_location:** `button1` (The "Which")
-- **optional_function:** `indication` (The "What")
+- **location:** `button1` (The "Which" component)
+- **function:** `indication` (The "What" attribute)
 
+**Rule 4**
 `select.entryway_button1_led_color`
 - **domain:** `select`
 - **area:** `entryway`
-- **optional_location:** `button1` (The "Which")
-- **optional_function:** `led_color` (The "What")
+- **location:** `button1` (The "Which" component)
+- **function:** `led_color` (The "What" attribute)
 
+**Rule 3**
 `number.entryway_local_dimming_speed`
 - **domain:** `number`
 - **area:** `entryway`
-- **optional_location:** *(none — applies to the whole device)*
-- **optional_function:** `local_dimming_speed` (The "What")
+- **location:** *(none — applies to the whole device)*
+- **function:** `local_dimming_speed` (The "What" attribute)
 
+**Rule 2**
 `update.entryway_scene_controller`
 - **domain:** `update`
 - **area:** `entryway`
-- **optional_location:** `scene_controller` (The "Which")
-- **optional_function:** *(none — implied by the 'update' domain)*
+- **location:** `scene_controller` (The "Which" component)
+- **function:** *(none — implied by the 'update' domain)*
 
+**Rule 4**
 `button.entryway_scene_controller_identify`
 - **domain:** `button`
 - **area:** `entryway`
-- **optional_location:** `scene_controller` (The "Which")
-- **optional_function:** `identify` (The "What")
+- **location:** `scene_controller` (The "Which" component)
+- **function:** `identify` (The "What" action)
+
+---
+**Automations (binding controller gestures → targets)**
+
+`automation.entryway_btn1_pressed_to_entire_home_evening`
+- **domain:** `automation`
+- **area:** `entryway`
+- **location:** `btn1`
+- **function:** `pressed_to_entire_home_evening`
+  - Consider summarizing long actions as `<trigger>_<action_summary>` such as `automation.entryway_btn1_press_set_home_evening`.
+
+`automation.entryway_paddle_double_to_entry_30_percent`
+- **domain:** `automation`
+- **area:** `entryway`
+- **location:** `paddle`
+- **function:** `double_to_entry_30_percent`
+
+---
+**Recommended gesture tokens**
+
+- Use `pressed` for a single tap or press.
+- Use `double`, `triple`, `quad`, and `quint` for multi-tap gestures.
+- Use `hold` when the gesture represents a long-press.
+- Use `release` for actions triggered when a button is released.
+
+> Tip: The **optional_function** is the final part of the entity ID that describes what the entity does or measures. Area slugs themselves may include underscores (e.g., `living_room`). If you don’t need an optional function, omit it entirely—no trailing underscore.
