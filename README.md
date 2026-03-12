@@ -1,7 +1,7 @@
 # Home Assistant Naming Guide
 
-**Version:** 2.0  
-**Last Updated:** 2025-10-29  
+**Version:** 2.1
+**Last Updated:** 2026-03-12
 **Status:** Comprehensive Specification
 
 Consistent, predictable naming makes your Home Assistant configuration maintainable, discoverable, and intuitive. This guide provides a deterministic naming system that scales from simple setups to complex smart homes.
@@ -30,6 +30,7 @@ Consistent, predictable naming makes your Home Assistant configuration maintaina
   - [Switches](#switches)
   - [Sensors](#sensors)
   - [Binary Sensors](#binary-sensors)
+  - [Covers](#covers)
 - [Less Common Entity Types](#less-common-entity-types)
   - [Media & Entertainment](#media--entertainment)
   - [Climate & Environment](#climate--environment)
@@ -37,6 +38,7 @@ Consistent, predictable naming makes your Home Assistant configuration maintaina
   - [Cleaning & Maintenance](#cleaning--maintenance)
   - [Configuration & Control](#configuration--control)
 - [Helper Entities](#helper-entities)
+  - [When to Include an Area](#when-to-include-an-area)
   - [Input Booleans](#input-booleans)
   - [Input Numbers](#input-numbers)
   - [Input Selects](#input-selects)
@@ -96,7 +98,7 @@ Consistent, predictable naming makes your Home Assistant configuration maintaina
    - Example: [`sensor.kitchen_temperature`](naming.md:1), [`sensor.kitchen_humidity`](naming.md:1)
 
 4. **Combination:** If need both physical and functional distinction → use both
-   - Example: [`sensor.front_door_lock_battery`](naming.md:1) (location: lock, function: battery)
+   - Example: [`sensor.entryway_lock_battery`](naming.md:1) (location: lock, function: battery)
 
 **Most Common Patterns:**
 
@@ -147,7 +149,7 @@ START: Name my entity
 **Use Rule 4 (Both) when:**
 - Need to specify both location AND function
 - Multiple components each with multiple functions
-- Example: [`sensor.front_door_lock_battery`](naming.md:1), [`sensor.back_door_lock_battery`](naming.md:1)
+- Example: [`sensor.entryway_lock_battery`](naming.md:1), [`sensor.back_door_lock_battery`](naming.md:1)
 
 ---
 
@@ -191,6 +193,9 @@ The deterministic naming system uses four rules applied in order. Stop at the fi
 - Ambiguity about which entity
 - Need to distinguish by location or function
 
+> **Future-Proofing:**
+> If you expect to add more entities of the same type to an area, consider using Rule 2 or 3 from the start. Renaming `light.office` to `light.office_ceiling` later will require updating all automations, scripts, dashboards, and scenes that reference it. When in doubt, add a location or function token proactively.
+
 ### Rule 2: The Rule of Physicality
 
 **IF** Rule 1 does not apply because there are multiple entities of the same domain in the same area, AND they can be distinguished by their **physical location or the component they belong to**, **THEN** you **must** add a `location`.
@@ -219,7 +224,7 @@ The deterministic naming system uses four rules applied in order. Stop at the fi
 **IF** Rule 1 does not apply, AND the entities are not distinguished by a physical location but by their **purpose, measurement, or attribute**, **THEN** you **must** add a `function`.
 
 **Examples:**
-- ✅ [`sensor.nursery_temperature`](naming.md:1) and [`sensor.nursery_humidity`](naming.md:1)
+- ✅ [`sensor.guest_room_temperature`](naming.md:1) and [`sensor.guest_room_humidity`](naming.md:1)
 - ✅ [`input_boolean.guest_mode`](naming.md:1) and [`input_boolean.away_mode`](naming.md:1)
 - ✅ [`binary_sensor.hallway_motion`](naming.md:1) and [`binary_sensor.hallway_occupancy`](naming.md:1)
 - ✅ [`light.bedroom_group`](naming.md:1) - Virtual group of lights
@@ -242,7 +247,7 @@ The deterministic naming system uses four rules applied in order. Stop at the fi
 
 **Examples:**
 - ✅ [`select.entryway_paddle_single_tap`](naming.md:1) and [`select.entryway_paddle_double_tap`](naming.md:1)
-- ✅ [`sensor.front_door_lock_battery`](naming.md:1) and [`sensor.front_door_lock_status`](naming.md:1)
+- ✅ [`sensor.entryway_lock_battery`](naming.md:1) and [`sensor.entryway_lock_status`](naming.md:1)
 - ✅ [`binary_sensor.bedroom_window_contact`](naming.md:1) and [`binary_sensor.bedroom_door_contact`](naming.md:1)
 - ✅ [`switch.entryway_button1_indication`](naming.md:1) and [`switch.entryway_button2_indication`](naming.md:1)
 
@@ -291,7 +296,7 @@ binary_sensor.hallway_occupancy # Occupancy detection
 binary_sensor.bedroom_window_contact   # Window contact sensor
 binary_sensor.bedroom_door_contact     # Door contact sensor
 
-sensor.front_door_lock_battery         # Front door lock battery
+sensor.entryway_lock_battery           # Entryway lock battery
 sensor.back_door_lock_battery          # Back door lock battery
 
 select.entryway_paddle_single_tap      # Paddle single tap action
@@ -340,7 +345,7 @@ START: Name my entity
    ├─ Is it unique? ✓
    ├─ Is it clear? ✓
    ├─ Does it follow pattern? ✓
-   └─ Is it under 50 characters? ✓
+   └─ Is it under 50 characters? ✓ (see note below)
 
 DONE: <domain>.<area>_<location>_<function>
 ```
@@ -386,7 +391,7 @@ light.bedroom_ceiling_accent
 - Table/desk lamps: `light.<area>_<furniture>`
 - Accent lighting: `light.<area>_accent`
 - Under-cabinet: `light.<area>_under_cabinet`
-- Outdoor: `light.frontyard_sconces`, `light.backyard_floods`
+- Outdoor: `light.front_yard_sconces`, `light.backyard_floods`
 
 **See detailed guide:** [Entity Types Reference](naming/reference/entity_types_detailed.md)
 
@@ -522,6 +527,27 @@ binary_sensor.entryway_doorbell_pet       # AI pet detection
 
 **See detailed guide:** [Entity Types Reference](naming/reference/entity_types_detailed.md)
 
+### Covers
+
+**Pattern:** `cover.<area>_<location>`
+
+**Examples:**
+```
+# Rule 1: Single cover in area
+cover.bedroom
+
+# Rule 2: Multiple covers by location
+cover.living_room_left_shade
+cover.living_room_right_shade
+cover.living_room_north_window
+
+# Rule 3: Multiple covers by function (rare)
+cover.garage_door
+cover.garage_window
+```
+
+**See detailed guide:** [Entity Types Reference](naming/reference/entity_types_detailed.md)
+
 ---
 
 ## Less Common Entity Types
@@ -544,7 +570,7 @@ media_player.portable_speaker  # Portable device (no area)
 
 **Examples:**
 ```
-camera.frontyard               # Outdoor camera
+camera.front_yard              # Outdoor camera
 camera.doorbell_main           # Main doorbell view
 camera.doorbell_package_view   # Package view
 camera.backyard_clear          # High-quality stream
@@ -572,6 +598,7 @@ remote.basement_universal      # Universal remote
 ```
 climate.home                   # Whole-home system
 climate.upstairs               # Upstairs zone
+climate.upstairs_hallway       # Zone thermostat
 climate.bedroom_ac             # Room AC unit
 ```
 
@@ -595,18 +622,48 @@ weather.cabin                  # Vacation home
 weather.kbfi                   # Weather station
 ```
 
+#### valve
+**Pattern:** `valve.<area>_<type>`
+
+**Examples:**
+```
+valve.backyard_irrigation      # Irrigation valve
+valve.kitchen_water_shutoff    # Water shutoff
+valve.utility_room_gas         # Gas shutoff
+```
+
+#### humidifier
+**Pattern:** `humidifier.<area>`
+
+**Examples:**
+```
+humidifier.bedroom             # Bedroom humidifier
+humidifier.nursery             # Nursery humidifier
+humidifier.whole_home          # Whole-home unit
+```
+
+#### water_heater
+**Pattern:** `water_heater.<area>`
+
+**Examples:**
+```
+water_heater.home              # Main water heater
+water_heater.garage            # Garage water heater
+water_heater.cabin             # Vacation home
+```
+
 **See detailed guide:** [Entity Types Reference](naming/reference/entity_types_detailed.md)
 
 ### Security & Safety
 
 #### lock
-**Pattern:** `lock.<area>_door`
+**Pattern:** `lock.<area>`
 
 **Examples:**
 ```
-lock.front_door                # Main entry
+lock.entryway                  # Main entry
+lock.garage                    # Garage entry
 lock.back_door                 # Rear entry
-lock.garage_door               # Garage entry
 lock.gate                      # Property gate
 ```
 
@@ -695,6 +752,17 @@ number.brightness_threshold    # Brightness threshold
 
 Helper entities (input_* entities) are virtual entities used for automation logic and user input.
 
+### When to Include an Area
+
+Helper entities follow the same 4-rule system, but many helpers are **area-less** because they represent whole-home concepts:
+
+- **No area needed:** Mode toggles, global thresholds, system flags
+  - `input_boolean.guest_mode`, `input_boolean.away_mode`
+- **Area prefix needed:** Helpers scoped to a specific room or device
+  - `input_number.rec_room_grow_light_duration`, `timer.backyard_floodlight_auto_off`
+
+**Rule of thumb:** If the helper controls or tracks something in a specific area, include the area prefix. If it's a global concept, omit it.
+
 ### Input Booleans
 
 **Pattern:** `input_boolean.<purpose>_<state>`
@@ -768,18 +836,23 @@ input_datetime.reminder_datetime # Reminder timestamp
 
 ### Timers
 
-**Pattern:** `timer.<purpose>_timer`
+**Pattern:** `timer.<area>_<purpose>`
+
+Do not add a `_timer` suffix — the domain already indicates it's a timer.
 
 **Examples:**
 ```
-timer.laundry_timer            # Laundry cycle timer
-timer.motion_timeout           # Motion timeout
-timer.cooking_timer            # Kitchen timer
+timer.backyard_floodlight_auto_off    # Floodlight auto-off countdown
+timer.living_room_right_shade_movement # Shade movement tracking
+timer.laundry_cycle                   # Laundry cycle countdown
+timer.kitchen_cooking                 # Kitchen cooking timer
 ```
 
 ### Counters
 
-**Pattern:** `counter.<item>_count`
+**Pattern:** `counter.<item>`
+
+Do not add a `_count` suffix — the domain already indicates it's a counter.
 
 **Examples:**
 ```
@@ -880,6 +953,44 @@ automation.upstairs_bedtime_lights_dim
 - `exterior` - All outdoor areas
 - `interior` - All indoor areas
 
+#### Notification Automations
+
+**Pattern:** `automation.notify_<event>`
+
+Notification automations send alerts in response to events. Because the "action" is always notification, the entity ID focuses on the triggering event.
+
+**Examples:**
+```
+automation.notify_doorbell_ring
+automation.notify_person_detected_at_front_door
+automation.notify_backyard_door_opened_while_away
+automation.notify_device_offline_daily_digest
+```
+
+**Alias Pattern:** `Notify: <Description>`
+```yaml
+automation.notify_doorbell_ring:
+  alias: "Notify: Doorbell Ring"
+
+automation.notify_device_offline_daily_digest:
+  alias: "Notify: Device Offline Daily Digest"
+```
+
+#### Configuration Automations
+
+**Pattern:** `automation.<area>_<device_function>`
+
+Some automations configure device behavior rather than responding to a single trigger-action pair. These include scene controller setups, multi-trigger responders, and device state sync automations.
+
+**Examples:**
+```
+automation.entryway_scene_controller
+automation.office_paddle_config
+automation.home_presence_sync
+```
+
+These use the `Area: Purpose` alias pattern (no arrow) since there's no single trigger→action relationship.
+
 ### Automation Naming Examples
 
 **✅ Good Examples:**
@@ -889,6 +1000,8 @@ automation.kitchen_sunset_lights_on
 automation.front_door_opened_notify
 automation.entryway_btn1_pressed_scene_evening
 automation.home_away_mode_all_off
+automation.notify_doorbell_ring
+automation.entryway_scene_controller
 ```
 
 **❌ Anti-Patterns:**
@@ -898,6 +1011,11 @@ automation.automation1                         # Not descriptive
 automation.bedroom_light                       # Missing trigger
 automation.motion_detected                     # Missing area and action
 ```
+
+**Singular vs. Plural Actions:**
+- Use singular (`light_on`, `light_off`) when the automation controls a single light
+- Use plural (`lights_on`, `lights_off`) when controlling multiple lights or a group
+- Example: `automation.office_motion_light_on` (one light) vs `automation.exterior_sunset_lights_on` (all exterior lights)
 
 ### Decision Tree for Automation Naming
 
@@ -928,13 +1046,15 @@ START: Name my automation
    automation.<area>_<trigger>_<action>
 
 5. VERIFY
-   ├─ Under 60 characters? ✓
+   ├─ Under 60 characters? ✓ (see note below)
    ├─ Clear trigger? ✓
    ├─ Clear action? ✓
    └─ Follows pattern? ✓
 
 DONE: automation.bedroom_motion_light_on
 ```
+
+> **Character limits:** Entity IDs should stay under 50 characters; automation IDs have a 60-character guideline. (Automation IDs include trigger and action components, so they tend to be longer.)
 
 **See detailed guide:** [Automation Naming Reference](naming/reference/automations_detailed.md)
 
@@ -1022,16 +1142,16 @@ script.system_export_data
 # Script: Reusable wake routine
 script.bedroom_wake_routine:
   sequence:
-    - service: light.turn_on
+    - action: light.turn_on
       target:
         entity_id: light.bedroom_ceiling
       data:
         brightness: 255
-    - service: cover.open_cover
+    - action: cover.open_cover
       target:
         entity_id: cover.bedroom
     - delay: 00:00:30
-    - service: media_player.play_media
+    - action: media_player.play_media
       # ...
 
 # Automation: Triggers the script
@@ -1040,7 +1160,7 @@ automation.bedroom_alarm_wake_routine:
     - platform: time
       at: input_datetime.alarm_time
   action:
-    - service: script.turn_on
+    - action: script.turn_on
       target:
         entity_id: script.bedroom_wake_routine
 ```
@@ -1150,12 +1270,15 @@ scene.upstairs_dim
 scene.bright                   # Missing area
 scene.tvnew_scene              # Poor naming, redundant "scene"
 scene.bedroom_scene_1          # Not descriptive
-scene.upstairs_bright          # Verify scope! (if affects downstairs too, use "home")
 ```
 
 ### Important: Verify Scope
 
 **Critical:** Ensure the area name accurately reflects which entities are affected.
+
+```
+scene.upstairs_bright          # Verify scope! (if it also affects downstairs, use "home_bright")
+```
 
 ```
 ❌ Bad: scene.upstairs_bright (but affects downstairs too)
@@ -1325,7 +1448,7 @@ sensor.downstairs_temperature   # Downstairs zone sensor
 
 **Examples:**
 ```
-light.frontyard_sconces         # Front yard lights
+light.front_yard_sconces        # Front yard lights
 camera.backyard_clear           # Backyard camera
 sensor.exterior_temperature     # General outdoor temp
 automation.exterior_sunset_lights_on # All exterior lights
@@ -1379,7 +1502,7 @@ script.temp_test_delay:
 
 **Examples:**
 ```
-switch.frontyard_christmas_lights
+switch.front_yard_christmas_lights
 switch.backyard_halloween_lights
 light.porch_holiday_lights
 automation.exterior_sunset_christmas_lights_on
@@ -1403,21 +1526,24 @@ light.bedroom_guest_lamp        # Temporary guest lamp
 
 ### Deprecated Entities
 
-**Pattern:** Keep original name, use metadata to indicate status
+**Pattern:** Keep original name, disable via the UI
 
 **DO NOT modify entity ID:**
-```yaml
+```
 # ❌ Bad
 switch.old_bedroom_light
 switch.deprecated_kitchen_fan
-
-# ✅ Good
-switch.bedroom_light
-  enabled: false
-  description: "Deprecated 2025-10-29: Replaced by light.bedroom_ceiling"
 ```
 
-**Rationale:** Entity ID describes what it IS, not its current state.
+Disable deprecated entities through the HA UI (Settings → Devices & services → entity → Disable). Document the deprecation in a code comment or commit message.
+
+```yaml
+# ✅ Good: Disable via the entity registry UI, and document in a comment
+# switch.bedroom_light — Deprecated 2025-10-29: Replaced by light.bedroom_ceiling
+#   Disabled in entity registry, will be removed after confirming no dependencies
+```
+
+**Rationale:** Entity ID describes what it IS, not its current state. The entity registry (not YAML) controls the enabled/disabled state.
 
 **See detailed guide:** [Edge Cases Reference](naming/reference/edge_cases_detailed.md)
 
@@ -1647,6 +1773,7 @@ Is it used in automations OR has cryptic name?
    - `dashboards/*.yaml` - dashboard cards
    - `.storage/lovelace.*` - UI-managed dashboards
    - `templates/*.yaml` - template sensors/binaries
+   - `customize.yaml` - entity customizations
 
 3. **Deploy updated config files** to HA:
    ```bash
@@ -1658,6 +1785,10 @@ Is it used in automations OR has cryptic name?
    hass-cli service call automation.reload
    hass-cli service call scene.reload
    hass-cli service call script.reload
+   hass-cli service call template.reload
+   hass-cli service call input_boolean.reload
+   hass-cli service call input_number.reload
+   hass-cli service call timer.reload
    ```
 
 ### Rename Step
@@ -1681,6 +1812,12 @@ Is it used in automations OR has cryptic name?
    git add -A && git commit -m "rename: old_entity_id → new_entity_id"
    ```
 
+### If Something Goes Wrong
+
+1. **Restore from snapshot** — Take an HA snapshot before starting any batch renames
+2. **Re-rename** — Use the same rename tool to rename back to the old ID
+3. **Check statistics** — Developer Tools → Statistics shows orphaned statistic IDs that need cleanup
+
 ### Common Mistakes to Avoid
 
 | Mistake | Consequence | Prevention |
@@ -1689,6 +1826,7 @@ Is it used in automations OR has cryptic name?
 | Forget to reload after config changes | HA still uses cached old config | Reload each domain after scp |
 | Miss references in .storage/ files | UI dashboards break | Include .storage/ in grep search |
 | Batch many renames without testing | Hard to identify which broke | Test after each rename or small batch |
+| Rename without migrating statistics | Historical data orphaned under old entity ID | Use Developer Tools → Statistics to update statistic IDs after rename |
 
 ---
 
@@ -1741,14 +1879,16 @@ This applies across all alias types:
 
 **Pattern:** `Trigger → Result` with area prefix when areas match
 
+**Arrow character:** Always use the Unicode arrow `→` (U+2192), not the ASCII `->`. This keeps aliases visually consistent and easy to scan.
+
 **Same area** (trigger and result in same location):
 ```yaml
 # Area prefix with colon - applies to both trigger and result
 automation.downstairs_bathroom_motion_light_on:
   alias: "Downstairs Bathroom: Motion → Light On"
 
-automation.exterior_sunset_minus_1h_lights_on:
-  alias: "Exterior: Sunset Minus 1h → Lights On"
+automation.exterior_sunset_minus_30m_lights_on:
+  alias: "Exterior: Sunset Minus 30m → Lights On"
 ```
 
 **Different areas** (trigger in one location, result in another):
@@ -1764,8 +1904,8 @@ automation.front_door_open_living_room_alert:
 **Locationless trigger** (time-based, etc.):
 ```yaml
 # Area prefix refers to result location
-automation.exterior_sunrise_plus_40m_lights_off:
-  alias: "Exterior: Sunrise Plus 40m → Lights Off"
+automation.exterior_sunrise_plus_20m_lights_off:
+  alias: "Exterior: Sunrise Plus 20m → Lights Off"
 
 automation.downstairs_bathroom_8pm_light_dim:
   alias: "Downstairs Bathroom: 8pm → Light Dim"
@@ -2112,11 +2252,15 @@ Zooz ZEN32 Scene Controller    # Controller device
 | sensor | `sensor.<area>_<location>_<measurement>` | [`sensor.bedroom_temperature`](naming.md:1) |
 | binary_sensor | `binary_sensor.<area>_<location>_<detection>` | [`binary_sensor.hallway_motion`](naming.md:1) |
 | media_player | `media_player.<area>_<device>` | [`media_player.living_room_tv`](naming.md:1) |
-| camera | `camera.<area>_<location>` | [`camera.frontyard`](naming.md:1) |
+| camera | `camera.<area>_<location>` | [`camera.front_yard`](naming.md:1) |
 | climate | `climate.<area>` | [`climate.home`](naming.md:1) |
 | fan | `fan.<area>_<type>` | [`fan.bedroom_ceiling`](naming.md:1) |
-| lock | `lock.<area>_door` | [`lock.front_door`](naming.md:1) |
+| lock | `lock.<area>` | [`lock.entryway`](naming.md:1) |
+| cover | `cover.<area>_<location>` | [`cover.living_room_left_shade`](naming.md:1) |
 | vacuum | `vacuum.<area>` | [`vacuum.upstairs`](naming.md:1) |
+| valve | `valve.<area>_<type>` | [`valve.backyard_irrigation`](naming.md:1) |
+| humidifier | `humidifier.<area>` | [`humidifier.bedroom`](naming.md:1) |
+| water_heater | `water_heater.<area>` | [`water_heater.home`](naming.md:1) |
 | automation | `automation.<area>_<trigger>_<action>` | [`automation.bedroom_motion_light_on`](naming.md:1) |
 | script | `script.<area>_<action>` | [`script.bedroom_wake_routine`](naming.md:1) |
 | scene | `scene.<area>_<mood>` | [`scene.living_room_movie`](naming.md:1) |
@@ -2130,8 +2274,8 @@ Zooz ZEN32 Scene Controller    # Controller device
 | input_select | `input_select.<purpose>_<options>` | [`input_select.house_mode`](naming.md:1) |
 | input_text | `input_text.<purpose>_<content>` | [`input_text.alarm_message`](naming.md:1) |
 | input_datetime | `input_datetime.<event>_<aspect>` | [`input_datetime.alarm_time`](naming.md:1) |
-| timer | `timer.<activity>_timer` | [`timer.laundry_timer`](naming.md:1) |
-| counter | `counter.<item>_count` | [`counter.doorbell_rings`](naming.md:1) |
+| timer | `timer.<area>_<purpose>` | [`timer.backyard_floodlight_auto_off`](naming.md:1) |
+| counter | `counter.<item>` | [`counter.doorbell_rings`](naming.md:1) |
 
 ---
 
@@ -2156,7 +2300,7 @@ Zooz ZEN32 Scene Controller    # Controller device
 | `window` | Window | [`binary_sensor.bedroom_window`](naming.md:1) |
 | `door` | Door | [`binary_sensor.front_door`](naming.md:1) |
 | `chandelier` | Chandelier | [`light.entryway_chandelier`](naming.md:1) |
-| `sconce` | Wall sconce | [`light.frontyard_sconces`](naming.md:1) |
+| `sconce` | Wall sconce | [`light.front_yard_sconces`](naming.md:1) |
 | `pendant` | Pendant light | [`light.kitchen_pendant`](naming.md:1) |
 | `recessed` | Recessed light | [`light.living_room_recessed`](naming.md:1) |
 
@@ -2675,6 +2819,8 @@ Check each entity against the 4-rule system:
 
 ## Appendix A: Complete Pattern Reference
 
+> **Note:** This appendix summarizes patterns from the main document. If there is a discrepancy, the main document sections take precedence.
+
 ### All Entity Patterns
 
 ```
@@ -2695,7 +2841,7 @@ fan.<area>_<type>
 weather.<location>
 
 # Security & safety
-lock.<area>_door
+lock.<area>
 alarm_control_panel.<area>
 siren.<area>_<location>
 
@@ -2721,8 +2867,8 @@ input_number.<purpose>_<value>
 input_select.<purpose>_<options>
 input_text.<purpose>_<content>
 input_datetime.<event>_<aspect>
-timer.<activity>_timer
-counter.<item>_count
+timer.<area>_<purpose>                    # e.g., timer.backyard_floodlight_auto_off
+counter.<item>                             # e.g., counter.doorbell_rings
 
 # Location & presence
 zone.<location>
@@ -2755,7 +2901,7 @@ garage, basement, attic
 
 **Outdoor Areas:**
 ```
-frontyard, backyard
+front_yard, backyard
 driveway, porch, deck, patio
 garden, shed, garage_exterior
 ```
@@ -2905,7 +3051,7 @@ sensor.kitchen_temperature
 binary_sensor.kitchen_occupancy
 ```
 
-**See:** [Edge Cases Reference](naming/reference/edge_cases_detailed.md) for complete ESPHome guidance.
+**See:** [Integration-Specific Patterns](#integration-specific-patterns) for the authoritative guide; [Edge Cases Reference](naming/reference/edge_cases_detailed.md) for complete ESPHome guidance.
 
 ### Z-Wave/Zigbee Devices
 
@@ -2923,7 +3069,7 @@ sensor.node_8_rssi       → sensor.rec_room_dimmer_rssi
 sensor.node_8_last_seen  → sensor.rec_room_dimmer_last_seen
 ```
 
-**See:** [Edge Cases Reference](naming/reference/edge_cases_detailed.md) for complete Z-Wave guidance.
+**See:** [Integration-Specific Patterns](#integration-specific-patterns) for the authoritative guide; [Edge Cases Reference](naming/reference/edge_cases_detailed.md) for complete Z-Wave guidance.
 
 ### MQTT Entities
 
@@ -2957,7 +3103,7 @@ sensor.home_total_power         # ✅ Sum of all power
 ✅ sensor.indoor_average_humidity
 ```
 
-**See:** [Edge Cases Reference](naming/reference/edge_cases_detailed.md) for complete template guidance.
+**See:** [Integration-Specific Patterns](#integration-specific-patterns) for the authoritative guide; [Edge Cases Reference](naming/reference/edge_cases_detailed.md) for complete template guidance.
 
 ---
 
@@ -3009,6 +3155,15 @@ sensor.home_total_power         # ✅ Sum of all power
 ---
 
 ## Appendix G: Version History
+
+### Version 2.1 (2026-03-12)
+
+- Fixed timer/counter suffix patterns (removed redundant `_timer`/`_count`)
+- Added notification automation pattern
+- Added configuration automation entity ID pattern
+- Standardized alias arrow character (→)
+- Fixed contradictions between main doc and appendices
+- Updated `service:` to `action:` in YAML examples
 
 ### Version 2.0 (2025-10-29)
 
@@ -3082,7 +3237,7 @@ If you find issues with the naming specification:
 
 **Entity ID:** Unique identifier for an entity (e.g., `light.bedroom_ceiling`)
 
-**Friendly Name:** Human-readable name shown in UI (e.g., "Bedroom Ceiling Light")
+**Friendly Name:** Human-readable name shown in UI (e.g., "Bedroom Ceiling")
 
 **Slug:** URL-friendly identifier (e.g., `humidity-dashboard`)
 
@@ -3100,7 +3255,7 @@ If you find issues with the naming specification:
 
 **kebab-case:** Lowercase with hyphens (e.g., `humidity-dashboard`, `device-name`)
 
-**Title Case:** Capitalize main words (e.g., "Bedroom Ceiling Light", "Motion Activated")
+**Title Case:** Capitalize main words (e.g., "Bedroom Ceiling", "Motion Activated")
 
 **UPPERCASE:** All capitals (avoid in entity IDs)
 
@@ -3199,11 +3354,10 @@ sensor.bedroom_ceiling_temperature
 
 **Q: How do I name disabled/deprecated entities?**
 
-A: Keep original name, use metadata:
+A: Keep original name. Disable via the HA UI (Settings → Devices & services → entity → Disable) and document in a comment:
 ```yaml
-switch.bedroom_light
-  enabled: false
-  description: "Deprecated 2025-10-29: Replaced by light.bedroom_ceiling"
+# switch.bedroom_light — Deprecated 2025-10-29: Replaced by light.bedroom_ceiling
+#   Disabled in entity registry, will be removed after confirming no dependencies
 ```
 
 **Q: Can I use numbers in entity IDs?**
@@ -3226,8 +3380,8 @@ A: Use standard naming, don't add `template_` or `virtual_` prefix:
 
 A: Include season in name or use tags:
 ```
-✅ switch.frontyard_christmas_lights
-✅ switch.frontyard_lights (with tags: [seasonal, christmas])
+✅ switch.front_yard_christmas_lights
+✅ switch.front_yard_lights (with tags: [seasonal, christmas])
 ```
 
 **Q: How do I handle entities during migration?**
@@ -3306,8 +3460,8 @@ This comprehensive naming guide provides:
 
 ---
 
-**Document Version:** 2.0  
-**Last Updated:** 2025-10-29  
+**Document Version:** 2.1
+**Last Updated:** 2026-03-12
 **Status:** Comprehensive Specification  
 **Lines:** ~3,500  
 **Coverage:** Complete naming system with detailed references
