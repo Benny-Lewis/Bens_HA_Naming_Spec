@@ -62,6 +62,8 @@ Consistent, predictable naming makes your Home Assistant configuration maintaina
 - [Temporary and Seasonal Entities](#temporary-and-seasonal-entities)
 - [Disabled Entities](#disabled-entities)
 - [Integration-Specific Patterns](#integration-specific-patterns)
+  - [Learned RF/IR Commands (Broadlink)](#learned-rfir-commands-broadlink)
+- [Migration Safety Checklist](#migration-safety-checklist)
 - [Virtual and Calculated Entities](#virtual-and-calculated-entities)
 
 ### Reference
@@ -488,6 +490,12 @@ binary_sensor.hallway_presence
 # Rule 4: Both location and detection
 binary_sensor.bedroom_window_contact
 binary_sensor.bedroom_door_contact
+
+# Rule 4: Camera AI detection
+binary_sensor.entryway_doorbell_person    # AI person detection
+binary_sensor.entryway_doorbell_visitor   # AI visitor detection
+binary_sensor.entryway_doorbell_vehicle   # AI vehicle detection
+binary_sensor.entryway_doorbell_pet       # AI pet detection
 ```
 
 **Common Detection Types:**
@@ -495,11 +503,22 @@ binary_sensor.bedroom_door_contact
 - **Contact:** `contact`, `door`, `window`
 - **Safety:** `smoke`, `co`, `leak`, `gas`
 - **Status:** `connectivity`, `problem`, `tamper`, `battery_low`
+- **Camera/AI Detection:** `person`, `visitor`, `vehicle`, `pet`, `package`, `animal`
 
 **Motion vs. Occupancy vs. Presence:**
 - `motion` - Detects movement (PIR sensor)
 - `occupancy` - Detects if area is occupied (may use multiple sensors)
 - `presence` - Detects if specific person is present (mmWave, AI)
+
+**Camera AI Detection Types:**
+- `person` - Generic person detected by AI camera
+- `visitor` - Visitor/stranger at doorbell (vs known person)
+- `vehicle` - Vehicle detected in camera view
+- `pet` - Pet/animal detected (doorbell cameras)
+- `animal` - Wildlife/animal detected (outdoor cameras)
+- `package` - Package delivery detected
+
+*For new detection types, use the detection category as the function token (e.g., `_face`, `_license_plate`).*
 
 **See detailed guide:** [Entity Types Reference](naming/reference/entity_types_detailed.md)
 
@@ -805,7 +824,7 @@ automation.living_room_evening_scene_cozy
 **Common Time Triggers:**
 - `sunrise`, `sunset`, `dawn`, `dusk`
 - `morning`, `evening`, `night`, `midnight`
-- `<time>` (e.g., `0700`, `2200`)
+- `<time>` (e.g., `8pm`, `7am`, or 24hr: `0700`, `2200`)
 
 #### Event-Based Automations
 
@@ -1318,6 +1337,42 @@ automation.exterior_sunset_lights_on # All exterior lights
 
 ## Temporary and Seasonal Entities
 
+### Lifecycle Prefixes
+
+Use these prefixes to indicate an item's lifecycle status. These are **global prefixes** that go at the start of the name (after the domain).
+
+**`temp_`** — Truly temporary, safe to delete anytime
+- Throwaway tests, one-off experiments
+- No need to save or document
+- Clean up periodically by searching for `temp_`
+
+**`dev_`** — In development, not ready for deployment
+- Work in progress, being actively developed
+- Keep the work, but don't rely on it yet
+- Rename to proper name when finished
+
+**Examples:**
+```yaml
+# Temporary - delete whenever
+script.temp_test_plug_timer
+automation.temp_debug_motion
+scene.temp_lighting_experiment
+
+# In development - keep but not production-ready
+automation.dev_presence_detection
+script.dev_morning_routine
+sensor.dev_energy_calculation
+```
+
+**Alias pattern:** Include status in alias for visibility
+```yaml
+automation.dev_garage_presence:
+  alias: "[DEV] Garage: Presence Detection"
+
+script.temp_test_delay:
+  alias: "[TEMP] Test Delay Script"
+```
+
 ### Seasonal Decorations
 
 **Pattern:** `<domain>.<area>_<season>_<device>`
@@ -1330,15 +1385,14 @@ light.porch_holiday_lights
 automation.exterior_sunset_christmas_lights_on
 ```
 
-### Temporary Devices
+### Guest/Visitor Devices
 
-**Pattern:** `<domain>.<area>_temp_<device>` or `<domain>.<area>_guest_<device>`
+**Pattern:** `<domain>.<area>_guest_<device>` or `<domain>.guest_<device>`
 
 **Examples:**
 ```
 device_tracker.guest_phone_1    # Guest's phone
 light.bedroom_guest_lamp        # Temporary guest lamp
-switch.garage_temp_heater       # Temporary heater
 ```
 
 **See detailed guide:** [Edge Cases Reference](naming/reference/edge_cases_detailed.md)
@@ -1387,17 +1441,20 @@ sensor.kitchen_temperature
 
 ### Z-Wave/Zigbee Entities
 
-**Rename functional entities, keep diagnostic entities:**
+**Rename all entities with area prefix, including diagnostics:**
 
 ```yaml
 # Functional (rename)
 light.2_1_dimmer → light.rec_room
 sensor.z_wave_thermostat_temperature → sensor.living_temperature
 
-# Diagnostic (keep)
-sensor.node_6_rssi              # Keep node reference
-sensor.node_6_last_seen         # Keep node reference
+# Diagnostic (also rename with area prefix)
+sensor.node_8_rssi       → sensor.rec_room_dimmer_rssi
+sensor.node_8_last_seen  → sensor.rec_room_dimmer_last_seen
 ```
+
+Area-prefixed diagnostics are easier to find when troubleshooting
+than opaque node numbers.
 
 ### Template Entities
 
@@ -1419,6 +1476,219 @@ sensor.indoor_average_humidity
 ```
 
 **See detailed guide:** [Edge Cases Reference](naming/reference/edge_cases_detailed.md)
+
+### Learned RF/IR Commands (Broadlink)
+
+Broadlink remotes store learned commands in a two-level structure: **device** (the physical thing being controlled) and **command** (the action).
+
+**Device naming pattern:** `<area>_<location>_<device_type>`
+
+Follow the same 4-rule system as entities:
+- Rule 1 (Uniqueness): `main_bedroom_fan` - only one fan
+- Rule 2 (Physicality): `living_room_left_shade` - distinguished by position
+- Rule 4 (Combination): `living_room_north_window_shade` - if both location and qualifier needed
+
+**Command naming pattern:** Simple snake_case action verbs
+
+```yaml
+# Device: living_room_left_shade
+up                    # Simple action
+down
+stop
+
+# Device: living_room_shades (group)
+all_up                # Prefixed for group commands
+all_down
+all_stop
+
+# Device: main_bedroom_fan
+off
+light_toggle          # Compound action
+speed_low
+speed_high
+```
+
+**Complete structure example:**
+```json
+{
+  "living_room_left_shade": {
+    "up": "...", "down": "...", "stop": "..."
+  },
+  "living_room_center_shade": {
+    "up": "...", "down": "...", "stop": "..."
+  },
+  "living_room_shades": {
+    "all_up": "...", "all_down": "...", "all_stop": "..."
+  },
+  "main_bedroom_fan": {
+    "off": "...", "light_toggle": "..."
+  }
+}
+```
+
+**Why this structure:**
+- Device name is fully self-documenting (no context needed)
+- Commands are simple and consistent across devices
+- Scales cleanly when adding new rooms or device types
+- Reads naturally in automations: `device: living_room_left_shade, command: up`
+
+**Avoid:**
+```yaml
+# Bad: Generic device, location in command
+"shades": { "left_up": "...", "center_down": "..." }
+
+# Bad: Numbered devices
+"shade_1": { "up": "..." }
+
+# Bad: Inconsistent command style
+"living_room_shade": { "goUp": "...", "go-down": "..." }
+```
+
+### Entity Classification and Rename Priority
+
+Integrations create many entities that serve different purposes. Not all need renaming.
+
+**Tier 1: Always Rename (Functional Entities)**
+
+Entities you directly control or regularly monitor:
+```yaml
+# Lights, physical switches, primary sensors
+light.ceiling_501 → light.kitchen_island
+switch.wave_1_mini → switch.entryway_exterior
+sensor.apollo_msr_2_temperature → sensor.guest_room_temperature
+```
+
+Rename these because:
+- They appear on dashboards and in voice commands
+- They're referenced in automations
+- Clear names improve daily usability
+
+**Tier 2: Rename If Needed (Configuration Entities)**
+
+Device settings and feature toggles:
+```yaml
+# Already has area - KEEP
+switch.living_room_crossfade          # Sonos setting, area clear
+switch.living_room_night_sound        # Sonos setting, area clear
+
+# Cryptic or used in automations - RENAME
+switch.ll_bath_motion_sensor_led_trigger_indicator
+  → switch.downstairs_bathroom_motion_led
+
+# Set-and-forget, not in automations - KEEP
+switch.doorbell_record_audio          # Configure once, never touch
+switch.thermostat_mute                # Rarely changed
+```
+
+Rename if ANY apply:
+- Used in automations
+- Appears on user-facing dashboards
+- Name is cryptic or uses abbreviations
+- Controlled by voice
+
+Leave as-is if ALL apply:
+- Set-and-forget setting
+- Already has area in name
+- Not used in automations
+- Integration may recreate on update
+
+**Tier 3: Rename with Area Prefix (Diagnostic Entities)**
+
+Technical and debug information — rename with area prefix for discoverability:
+```yaml
+# Rename diagnostics with area prefix
+sensor.node_8_rssi       → sensor.rec_room_dimmer_rssi
+sensor.node_8_last_seen  → sensor.rec_room_dimmer_last_seen
+update.dimmer_firmware    → update.rec_room_dimmer_firmware
+button.node_8_ping       → button.rec_room_dimmer_ping
+```
+
+Rename these because:
+- Area-prefixed names are easier to find when troubleshooting
+- Node numbers are opaque and meaningless after device swaps
+- Consistency with Tier 1/2 entities improves the overall system
+
+**Decision Flowchart:**
+```
+Is it a light, switch, or sensor you directly use?
+  → YES: Rename (Tier 1)
+  → NO: Continue...
+
+Is it diagnostic/debug info (RSSI, firmware, node ID)?
+  → YES: Rename with area prefix (Tier 3)
+  → NO: Continue...
+
+Is it used in automations OR has cryptic name?
+  → YES: Rename (Tier 2)
+  → NO: Keep as-is (Tier 2)
+```
+
+---
+
+## Migration Safety Checklist
+
+**CRITICAL: Before renaming ANY entity, complete this checklist:**
+
+### Pre-Rename Steps
+
+1. **Find all references** to the entity being renamed:
+   ```bash
+   # From tools/ directory on HA instance:
+   make refcheck
+
+   # Or locally:
+   grep -r "old_entity_id" *.yaml dashboards/ .storage/
+   ```
+
+2. **Update references FIRST** in these files (before renaming):
+   - `automations.yaml` - automation triggers, conditions, actions
+   - `scenes.yaml` - scene entity definitions
+   - `scripts.yaml` - script sequences
+   - `dashboards/*.yaml` - dashboard cards
+   - `.storage/lovelace.*` - UI-managed dashboards
+   - `templates/*.yaml` - template sensors/binaries
+
+3. **Deploy updated config files** to HA:
+   ```bash
+   scp <file>.yaml root@homeassistant.local:/config/
+   ```
+
+4. **Reload the domains** that were updated:
+   ```bash
+   hass-cli service call automation.reload
+   hass-cli service call scene.reload
+   hass-cli service call script.reload
+   ```
+
+### Rename Step
+
+5. **Now rename the entity**:
+   ```bash
+   hass-cli entity rename old_entity_id new_entity_id
+   ```
+
+6. **Update friendly name** if needed:
+   ```bash
+   hass-cli raw ws config/entity_registry/update --json='{"entity_id": "new_entity_id", "name": "New Friendly Name"}'
+   ```
+
+### Post-Rename Verification
+
+7. **Test affected automations/scenes** to confirm they work
+
+8. **Commit changes** to git:
+   ```bash
+   git add -A && git commit -m "rename: old_entity_id → new_entity_id"
+   ```
+
+### Common Mistakes to Avoid
+
+| Mistake | Consequence | Prevention |
+|---------|-------------|------------|
+| Rename entity before updating references | Automations/scenes break immediately | Always update references FIRST |
+| Forget to reload after config changes | HA still uses cached old config | Reload each domain after scp |
+| Miss references in .storage/ files | UI dashboards break | Include .storage/ in grep search |
+| Batch many renames without testing | Hard to identify which broke | Test after each rename or small batch |
 
 ---
 
@@ -1450,28 +1720,360 @@ binary_sensor.anyone_home       # Presence aggregation
 
 ## Friendly Names
 
-Friendly names are shown in the UI and should use natural language.
+Friendly names (aliases) are shown in the UI and should use natural language with visual separators.
 
-**Rules:**
+**General Rules:**
 - Use Title Case for proper nouns
 - Use natural language with spaces
 - Add qualifiers for duplicates in parentheses
 - Can differ from entity ID
 
+### Area Prefix Rule
+
+**Core principle:** Use a colon after the area/subject when it applies to everything that follows. Omit the colon and state areas explicitly when they differ.
+
+This applies across all alias types:
+- `Area: ...` — area applies to everything (colon groups it)
+- `Area Device: ...` — "Area Device" is the subject (no colon between area and device)
+- `Source-Area Thing → Dest-Area Thing` — different areas stated explicitly (no colon prefix)
+
+### Automation Aliases
+
+**Pattern:** `Trigger → Result` with area prefix when areas match
+
+**Same area** (trigger and result in same location):
+```yaml
+# Area prefix with colon - applies to both trigger and result
+automation.downstairs_bathroom_motion_light_on:
+  alias: "Downstairs Bathroom: Motion → Light On"
+
+automation.exterior_sunset_minus_1h_lights_on:
+  alias: "Exterior: Sunset Minus 1h → Lights On"
+```
+
+**Different areas** (trigger in one location, result in another):
+```yaml
+# No colon prefix - state each area explicitly
+automation.driveway_motion_entryway_lights_on:
+  alias: "Driveway Motion → Entryway Lights On"
+
+automation.front_door_open_living_room_alert:
+  alias: "Front Door Open → Living Room Alert"
+```
+
+**Locationless trigger** (time-based, etc.):
+```yaml
+# Area prefix refers to result location
+automation.exterior_sunrise_plus_40m_lights_off:
+  alias: "Exterior: Sunrise Plus 40m → Lights Off"
+
+automation.downstairs_bathroom_8pm_light_dim:
+  alias: "Downstairs Bathroom: 8pm → Light Dim"
+```
+
+### Configuration Automations
+
+Some automations don't follow the trigger→action pattern because they configure device behavior or handle multiple triggers/actions. These include:
+
+- **Scene controller setups** - Configure button mappings for multi-button devices
+- **Device configuration** - Set LED colors, sync states, manage device modes
+- **Multi-trigger responders** - React to many inputs with conditional logic
+
+**Entity ID Pattern:** `<area>_<device_function>`
+
+**Alias Pattern:** `Area: Purpose` (no arrow - no single trigger→action relationship)
+
 **Examples:**
 ```yaml
-light.bedroom_ceiling:
-  friendly_name: "Bedroom Ceiling Light"
+automation.entryway_scene_controller:
+  alias: "Entryway: Scene Controller"
 
-light.bedroom_bedside:
-  friendly_name: "Bedroom Lamp (Bedside)"
+automation.office_paddle_config:
+  alias: "Office: Paddle Config"
 
-sensor.kitchen_temperature:
-  friendly_name: "Kitchen Temperature"
+automation.home_presence_sync:
+  alias: "Home: Presence Sync"
 
-automation.bedroom_motion_light_on:
-  friendly_name: "Bedroom Motion → Light On"
+automation.system_device_monitor:
+  alias: "System: Device Monitor"
 ```
+
+**When to use:**
+- Blueprint-based automations that configure device behavior
+- Automations with multiple unrelated triggers
+- Automations where the "action" is complex conditional logic
+
+### Script Aliases
+
+**Pattern:** `Subject: Action` where Subject is `Area` or `Area Device`
+
+**Standard scripts** (action in one area):
+```yaml
+script.bedroom_wake_routine:
+  alias: "Bedroom: Wake Routine"
+
+script.home_goodnight:
+  alias: "Home: Goodnight"
+
+script.front_yard_maple_watered:
+  alias: "Front Yard: Maple Watered"
+```
+
+**Transfer scripts** (source → destination, rare):
+```yaml
+script.office_music_to_living_room:
+  alias: "Office Music → Living Room"
+```
+
+### Scene Aliases
+
+**Pattern:** `Subject: State` where Subject is `Area` or `Area Device`
+
+When the scene controls a specific device type, include it in the subject (no colon between area and device since "Area Device" is a logical unit):
+
+**Area only** (mood/activity for whole area):
+```yaml
+scene.home_dark:
+  alias: "Home: Dark"
+
+scene.upstairs_tv:
+  alias: "Upstairs: TV"
+
+scene.living_room_movie:
+  alias: "Living Room: Movie"
+```
+
+**Area + device type** (when specifying what's controlled):
+```yaml
+scene.upstairs_lights_bright:
+  alias: "Upstairs Lights: Bright"
+
+scene.upstairs_lights_medium:
+  alias: "Upstairs Lights: Medium"
+
+scene.home_nightlights:
+  alias: "Home: Nightlights"  # "nightlights" is the subject, not a device type
+```
+
+### Entity Friendly Names
+
+Friendly names are the human-readable labels shown in the Home Assistant UI. Unlike entity IDs (which use underscores and lowercase), friendly names use Title Case with spaces.
+
+#### Core Principles
+
+1. **Mirror the entity ID structure** - The friendly name should be a human-readable version of the entity ID
+2. **Use Title Case** - Capitalize each word: "Guest Room Temperature" not "guest room temperature"
+3. **Use spaces, not underscores** - "Backyard Door Contact" not "Backyard_Door_Contact"
+4. **Omit the domain** - Never include "Sensor", "Binary Sensor", "Light" etc. in the friendly name
+5. **Omit redundant words** - "Motion" not "Motion Detected", "Person" not "Person Detected"
+6. **Be consistent** - All entities from the same device should follow the same pattern
+
+#### The Mapping Rule
+
+Transform entity IDs to friendly names by:
+1. Removing the domain prefix (`sensor.`, `binary_sensor.`, etc.)
+2. Replacing underscores with spaces
+3. Capitalizing each word (Title Case)
+4. Optionally adding context words for clarity
+
+```
+Entity ID                                    → Friendly Name
+─────────────────────────────────────────────────────────────────
+sensor.guest_room_temperature                → "Guest Room Temperature"
+binary_sensor.downstairs_bathroom_motion     → "Downstairs Bathroom Motion"
+light.kitchen_island                         → "Kitchen Island"
+binary_sensor.entryway_doorbell_person       → "Entryway Doorbell Person"
+sensor.upstairs_hallway_thermostat_humidity  → "Upstairs Hallway Thermostat Humidity"
+```
+
+#### Domain-Specific Patterns
+
+**Sensors:**
+```yaml
+# Environmental measurements
+sensor.guest_room_temperature:        "Guest Room Temperature"
+sensor.guest_room_humidity:           "Guest Room Humidity"
+sensor.guest_room_co2:                "Guest Room CO2"
+sensor.guest_room_pressure:           "Guest Room Pressure"
+
+# Battery sensors
+sensor.backyard_door_battery:         "Backyard Door Battery"
+sensor.attic_switchbot_battery:       "Attic SwitchBot Battery"
+
+# Energy sensors
+sensor.guest_room_fan_energy:         "Guest Room Fan Energy"
+sensor.downstairs_bathroom_power:     "Downstairs Bathroom Power"
+```
+
+**Binary Sensors:**
+```yaml
+# Motion and occupancy
+binary_sensor.garage_motion:                      "Garage Motion"
+binary_sensor.rec_room_occupancy:                 "Rec Room Occupancy"
+binary_sensor.downstairs_bathroom_motion:         "Downstairs Bathroom Motion"
+
+# Contact sensors
+binary_sensor.backyard_door_contact:              "Backyard Door Contact"
+binary_sensor.garage_door_contact:                "Garage Door Contact"
+
+# AI camera detection (no "Detected" suffix!)
+binary_sensor.entryway_doorbell_person:           "Entryway Doorbell Person"
+binary_sensor.entryway_doorbell_vehicle:          "Entryway Doorbell Vehicle"
+binary_sensor.backyard_camera_animal:             "Backyard Camera Animal"
+
+# Template/alert sensors
+binary_sensor.indoor_humidity_alert:              "Indoor Humidity Alert"
+```
+
+**Lights:**
+```yaml
+# Room lights (location describes physical position)
+light.bedroom_ceiling:                "Bedroom Ceiling"
+light.kitchen_island:                 "Kitchen Island"
+light.living_room_lamp:               "Living Room Lamp"
+
+# Status indicator lights (different from room illumination)
+light.guest_room_status:              "Guest Room Status"
+```
+
+**Switches:**
+```yaml
+switch.backyard_christmas_lights:     "Backyard Christmas Lights"
+switch.guest_room_fan:                "Guest Room Fan"
+switch.entryway_exterior:             "Entryway Exterior"
+```
+
+#### Device Context Patterns
+
+**Multi-Sensor Devices** (one device, multiple measurements):
+```yaml
+# Apollo MSR-2 in guest room - all share area, differ by function
+sensor.guest_room_co2:                "Guest Room CO2"
+sensor.guest_room_temperature:        "Guest Room Temperature"
+sensor.guest_room_pressure:           "Guest Room Pressure"
+sensor.guest_room_light_level:        "Guest Room Light Level"
+sensor.guest_room_uv_index:           "Guest Room UV Index"
+```
+
+**Embedded Sensors** (sensors inside another device like a thermostat):
+```yaml
+# Sensors embedded in thermostat - include device as location
+sensor.upstairs_hallway_thermostat_temperature:       "Upstairs Hallway Thermostat Temperature"
+sensor.upstairs_hallway_thermostat_humidity:          "Upstairs Hallway Thermostat Humidity"
+binary_sensor.upstairs_hallway_thermostat_motion:     "Upstairs Hallway Thermostat Motion"
+binary_sensor.upstairs_hallway_thermostat_occupancy:  "Upstairs Hallway Thermostat Occupancy"
+```
+
+**Camera AI Detection** (smart cameras with object detection):
+```yaml
+# Doorbell camera - area + device + detection type
+binary_sensor.entryway_doorbell_motion:   "Entryway Doorbell Motion"
+binary_sensor.entryway_doorbell_person:   "Entryway Doorbell Person"
+binary_sensor.entryway_doorbell_visitor:  "Entryway Doorbell Visitor"
+binary_sensor.entryway_doorbell_vehicle:  "Entryway Doorbell Vehicle"
+binary_sensor.entryway_doorbell_pet:      "Entryway Doorbell Pet"
+
+# Outdoor camera - area + device + detection type
+binary_sensor.backyard_camera_motion:     "Backyard Camera Motion"
+binary_sensor.backyard_camera_person:     "Backyard Camera Person"
+binary_sensor.backyard_camera_vehicle:    "Backyard Camera Vehicle"
+binary_sensor.backyard_camera_animal:     "Backyard Camera Animal"
+```
+
+**Door/Window Sensors with Measurements:**
+```yaml
+# Contact sensor with temperature and battery
+binary_sensor.backyard_door_contact:      "Backyard Door Contact"
+sensor.backyard_door_temperature:         "Backyard Door Temperature"
+sensor.backyard_door_battery:             "Backyard Door Battery"
+
+# Window sensor with humidity and temperature
+sensor.downstairs_bathroom_window_humidity:            "Downstairs Bathroom Window Humidity"
+sensor.downstairs_bathroom_window_temperature:         "Downstairs Bathroom Window Temperature"
+sensor.downstairs_bathroom_window_switchbot_battery:   "Downstairs Bathroom Window SwitchBot Battery"
+```
+
+**Complex Locations** (device at specific location within area):
+```yaml
+# Sensor mounted at whole house fan inlet
+sensor.upstairs_hallway_whole_house_fan_temperature:  "Upstairs Hallway Whole House Fan Temperature"
+sensor.upstairs_hallway_whole_house_fan_humidity:     "Upstairs Hallway Whole House Fan Humidity"
+sensor.upstairs_hallway_whole_house_fan_pressure:     "Upstairs Hallway Whole House Fan Pressure"
+sensor.upstairs_hallway_whole_house_fan_battery:      "Upstairs Hallway Whole House Fan Battery"
+```
+
+**Occupancy Zones** (radar with multiple detection zones):
+```yaml
+# Zone numbers without underscore in entity ID, with space in friendly name
+binary_sensor.guest_room_zone1_occupancy:  "Guest Room Zone 1 Occupancy"
+binary_sensor.guest_room_zone2_occupancy:  "Guest Room Zone 2 Occupancy"
+binary_sensor.guest_room_zone3_occupancy:  "Guest Room Zone 3 Occupancy"
+```
+
+#### Anti-Patterns (What NOT to Do)
+
+**Don't include "Detected" or "Sensor" suffixes:**
+```yaml
+# BAD
+binary_sensor.backyard_camera_motion:  "Backyard Camera Motion Detected"  ❌
+binary_sensor.garage_motion:           "Garage Motion Sensor"             ❌
+sensor.kitchen_temperature:            "Kitchen Temperature Sensor"       ❌
+
+# GOOD
+binary_sensor.backyard_camera_motion:  "Backyard Camera Motion"           ✓
+binary_sensor.garage_motion:           "Garage Motion"                    ✓
+sensor.kitchen_temperature:            "Kitchen Temperature"              ✓
+```
+
+**Don't include domain in friendly name:**
+```yaml
+# BAD
+binary_sensor.backyard_door_contact:   "Backyard Door Contact Binary Sensor"  ❌
+light.bedroom_ceiling:                 "Bedroom Ceiling Light Entity"         ❌
+
+# GOOD
+binary_sensor.backyard_door_contact:   "Backyard Door Contact"                ✓
+light.bedroom_ceiling:                 "Bedroom Ceiling"                      ✓
+```
+
+**Don't include device model or MAC address:**
+```yaml
+# BAD
+sensor.guest_room_co2:                 "Apollo MSR-2 CO2"                     ❌
+sensor.guest_room_co2:                 "Guest Room CO2 (173d74)"              ❌
+
+# GOOD
+sensor.guest_room_co2:                 "Guest Room CO2"                       ✓
+```
+
+**Don't use abbreviations (except well-known ones like CO2, UV):**
+```yaml
+# BAD
+sensor.downstairs_bathroom_temperature:  "DS Bath Temp"                       ❌
+binary_sensor.upstairs_hallway_motion:   "UL Hall Motion"                     ❌
+
+# GOOD
+sensor.downstairs_bathroom_temperature:  "Downstairs Bathroom Temperature"    ✓
+binary_sensor.upstairs_hallway_motion:   "Upstairs Hallway Motion"            ✓
+```
+
+#### Qualifiers in Parentheses
+
+Use parentheses when you need to add disambiguation or context that doesn't fit the standard pattern:
+
+```yaml
+# Disambiguating similar entities
+light.bedroom_lamp:           "Bedroom Lamp (Bedside)"      # Which lamp?
+light.bedroom_floor_lamp:     "Bedroom Lamp (Floor)"
+
+# Clarifying purpose
+light.guest_room_status:      "Guest Room Status (RGB)"     # Not for illumination
+
+# Brand identification when needed for battery sensors
+sensor.attic_switchbot_battery:  "Attic SwitchBot Battery"  # vs other batteries
+```
+
+**See also:** [naming_examples.md](naming_examples.md) for comprehensive real-world examples from 106 entity migrations.
 
 ---
 
@@ -2307,7 +2909,7 @@ binary_sensor.kitchen_occupancy
 
 ### Z-Wave/Zigbee Devices
 
-**Strategy:** Rename functional entities, keep diagnostic entities.
+**Strategy:** Rename all entities with area prefix, including diagnostics.
 
 **Functional (rename):**
 ```
@@ -2315,10 +2917,10 @@ light.2_1_dimmer → light.rec_room
 sensor.z_wave_thermostat_temperature → sensor.living_temperature
 ```
 
-**Diagnostic (keep):**
+**Diagnostic (also rename with area prefix):**
 ```
-sensor.node_6_rssi              # Keep node reference
-sensor.node_6_last_seen         # Keep node reference
+sensor.node_8_rssi       → sensor.rec_room_dimmer_rssi
+sensor.node_8_last_seen  → sensor.rec_room_dimmer_last_seen
 ```
 
 **See:** [Edge Cases Reference](naming/reference/edge_cases_detailed.md) for complete Z-Wave guidance.
